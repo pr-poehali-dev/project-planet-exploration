@@ -74,8 +74,10 @@ export default function DevayAI() {
         }),
       });
       clearTimeout(timeout);
-      const data = await res.json();
-      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      const text = await res.text();
+      if (!text) throw new Error("Достигнут лимит вызовов. Обновите подписку на poehali.dev/p/pay");
+      let parsed = JSON.parse(text);
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
       const reply = parsed.reply ?? parsed?.message?.content ?? "Нет ответа";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
