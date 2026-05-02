@@ -262,13 +262,13 @@ const ProductPage = () => {
                 ))}
               </ul>
               <div className="flex gap-4">
-                <button
-                  onClick={() => setShowForm(true)}
+                <Link
+                  to={`/chat/${product.slug}`}
                   className="group px-8 py-4 bg-gradient-to-r from-accent to-accent/90 text-black rounded-full hover:shadow-2xl hover:shadow-accent/50 transition-all font-semibold text-lg flex items-center gap-3"
                 >
-                  Начать бесплатно
+                  Попробовать
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
-                </button>
+                </Link>
                 <Link
                   to="/#pricing"
                   className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white flex items-center"

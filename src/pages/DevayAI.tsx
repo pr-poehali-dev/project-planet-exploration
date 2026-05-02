@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import func2url from "../../backend/func2url.json";
 
@@ -8,14 +8,79 @@ interface Message {
   content: string;
 }
 
-const SYSTEM_PROMPT = `Ты — DevayAI, умный русскоязычный ИИ-ассистент платформы devay.ru. Отвечай чётко, по делу и дружелюбно. Всегда отвечай на русском языке, если пользователь не попросил иначе.`;
+const PRODUCT_CONFIGS: Record<string, { name: string; prompt: string; suggestions: string[] }> = {
+  devaychat: {
+    name: "DevayChat",
+    prompt: `Ты — DevayChat, языковой ИИ-ассистент платформы devay.ru уровня GPT-4. Специализируешься на генерации текстов, написании кода, переводе, аналитике и ответах на вопросы. Отвечай чётко, профессионально и дружелюбно. Всегда отвечай на русском языке, если пользователь не попросил иначе.`,
+    suggestions: [
+      "Напиши текст для лендинга ИИ-стартапа",
+      "Объясни, что такое нейронные сети простыми словами",
+      "Придумай 5 идей для бизнеса с использованием ИИ",
+      "Переведи на английский: «Привет, как дела?»",
+    ],
+  },
+  devayvision: {
+    name: "DevayVision",
+    prompt: `Ты — DevayVision, ИИ-ассистент по генерации изображений платформы devay.ru. Помогаешь пользователям составлять точные и детальные текстовые описания (промпты) для создания изображений: маркетинговых материалов, иллюстраций, логотипов, фото продуктов. Объясняй как лучше описать стиль, цвета, композицию. Отвечай на русском языке.`,
+    suggestions: [
+      "Помоги составить промпт для логотипа IT-компании",
+      "Как описать реалистичное фото продукта для рекламы?",
+      "Придумай описание баннера для соцсетей в стиле минимализм",
+      "Какие параметры влияют на качество генерации изображения?",
+    ],
+  },
+  devayaudio: {
+    name: "DevayAudio",
+    prompt: `Ты — DevayAudio, ИИ-ассистент по работе с аудио и речью платформы devay.ru. Специализируешься на транскрибации, распознавании речи, создании субтитров, диаризации и обработке звонков. Помогаешь пользователям понять как настроить и использовать аудио-модели. Отвечай на русском языке.`,
+    suggestions: [
+      "Как транскрибировать звонки колл-центра?",
+      "Какие форматы аудио вы поддерживаете?",
+      "Как создать субтитры для видео автоматически?",
+      "Что такое диаризация и зачем она нужна?",
+    ],
+  },
+  devayvideo: {
+    name: "DevayVideo",
+    prompt: `Ты — DevayVideo, ИИ-ассистент по генерации видео платформы devay.ru. Помогаешь пользователям создавать текстовые описания для генерации видеороликов, анимаций и визуализаций. Объясняешь как правильно описать движение камеры, сцену, персонажей, стиль. Отвечай на русском языке.`,
+    suggestions: [
+      "Помоги составить описание рекламного видеоролика",
+      "Как описать движение камеры в промпте для видео?",
+      "Придумай сцену для обучающей анимации по физике",
+      "Какой максимальный хронометраж видео можно сгенерировать?",
+    ],
+  },
+  devaycode: {
+    name: "DevayCode",
+    prompt: `Ты — DevayCode, ИИ-ассистент для разработчиков платформы devay.ru. Специализируешься на генерации кода, объяснении алгоритмов, поиске багов, рефакторинге и написании тестов. Поддерживаешь Python, JavaScript, TypeScript, Go, Rust, Java, SQL и другие языки. Давай примеры кода с объяснениями. Отвечай на русском языке, код пиши без перевода.`,
+    suggestions: [
+      "Напиши REST API на Python с FastAPI",
+      "Найди баг в этом коде и объясни причину",
+      "Как написать unit-тесты для React компонента?",
+      "Оптимизируй этот SQL-запрос для больших таблиц",
+    ],
+  },
+  devayapi: {
+    name: "Devay API",
+    prompt: `Ты — Devay API ассистент платформы devay.ru. Помогаешь разработчикам интегрировать AI-модели devay.ru через REST API. Знаешь все эндпоинты, форматы запросов и ответов, методы аутентификации, лимиты и тарификацию. Совместим с OpenAI SDK. Давай примеры кода для интеграции. Отвечай на русском языке.`,
+    suggestions: [
+      "Как подключить Devay API совместимо с OpenAI SDK?",
+      "Покажи пример запроса к chat completion API",
+      "Какие модели доступны через API и их лимиты?",
+      "Как настроить аутентификацию через API ключ?",
+    ],
+  },
+};
 
-const SUGGESTIONS = [
-  "Напиши текст для лендинга ИИ-стартапа",
-  "Объясни, что такое нейронные сети",
-  "Придумай 5 идей для бизнеса с ИИ",
-  "Переведи на английский: «Привет, как дела?»",
-];
+const DEFAULT_CONFIG = {
+  name: "DevayAI",
+  prompt: `Ты — DevayAI, умный русскоязычный ИИ-ассистент платформы devay.ru. Отвечай чётко, по делу и дружелюбно. Всегда отвечай на русском языке, если пользователь не попросил иначе.`,
+  suggestions: [
+    "Напиши текст для лендинга ИИ-стартапа",
+    "Объясни, что такое нейронные сети",
+    "Придумай 5 идей для бизнеса с ИИ",
+    "Переведи на английский: «Привет, как дела?»",
+  ],
+};
 
 export default function DevayAI() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,6 +89,8 @@ export default function DevayAI() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
+  const { product } = useParams<{ product?: string }>();
+  const config = (product && PRODUCT_CONFIGS[product]) ? PRODUCT_CONFIGS[product] : DEFAULT_CONFIG;
 
   useEffect(() => {
     const token = localStorage.getItem("devay_token");
@@ -68,7 +135,7 @@ export default function DevayAI() {
         body: JSON.stringify({
           model: "qwen2.5:7b",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: config.prompt },
             ...updatedMessages,
           ],
         }),
@@ -109,7 +176,7 @@ export default function DevayAI() {
           </Link>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm text-accent font-medium">DevayAI · qwen2.5</span>
+            <span className="text-sm text-accent font-medium">{config.name} · qwen2.5</span>
           </div>
           <button
             onClick={handleLogout}
@@ -130,13 +197,13 @@ export default function DevayAI() {
                 <Icon name="Sparkles" size={32} className="text-accent" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold mb-2">DevayAI</h1>
+                <h1 className="text-2xl font-bold mb-2">{config.name}</h1>
                 <p className="text-muted-foreground text-sm max-w-sm">
                   Российский ИИ-ассистент на базе Qwen 2.5. Задайте любой вопрос или выберите подсказку ниже.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-                {SUGGESTIONS.map((s) => (
+                {config.suggestions.map((s) => (
                   <button
                     key={s}
                     onClick={() => sendMessage(s)}
