@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import LeadForm from "@/components/LeadForm";
 
@@ -198,11 +198,8 @@ export const PRODUCTS: ProductConfig[] = [
   },
 ];
 
-interface ProductPageProps {
-  slug: string;
-}
-
-const ProductPage = ({ slug }: ProductPageProps) => {
+const ProductPage = () => {
+  const { slug } = useParams<{ slug: string }>();
   const product = PRODUCTS.find((p) => p.slug === slug);
   const [showForm, setShowForm] = useState(false);
 

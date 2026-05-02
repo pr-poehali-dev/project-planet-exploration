@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, MessageSquare, Image, Mic, Code, Video, Zap, Lock, Globe, Shield, TrendingUp, Cpu } from "lucide-react";
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import LeadForm from "@/components/LeadForm";
 
 const products = [
   {
     icon: "MessageSquare",
     tag: "GPT-серия",
     name: "DevayChat",
+    slug: "devaychat",
     desc: "Мощный языковой ИИ уровня GPT-4. Генерирует тексты, отвечает на вопросы, пишет код, переводит и обобщает — в режиме реального времени.",
     badge: "Популярно",
   },
@@ -14,18 +17,21 @@ const products = [
     icon: "Image",
     tag: "DALL-E аналог",
     name: "DevayVision",
+    slug: "devayvision",
     desc: "Генерация изображений по текстовому описанию. От реалистичных фото до иллюстраций и маркетинговых креативов — за секунды.",
   },
   {
     icon: "Mic",
     tag: "Whisper аналог",
     name: "DevayAudio",
+    slug: "devayaudio",
     desc: "Распознавание речи на 90+ языках. Транскрибация, субтитры, обработка звонков. Работает даже с шумом и акцентами.",
   },
   {
     icon: "Video",
     tag: "Sora аналог",
     name: "DevayVideo",
+    slug: "devayvideo",
     desc: "Генерация видео по тексту. Создавайте ролики, визуализации и анимации для бизнеса без съёмочной группы.",
     badge: "Новинка",
   },
@@ -33,12 +39,14 @@ const products = [
     icon: "Code",
     tag: "Codex аналог",
     name: "DevayCode",
+    slug: "devaycode",
     desc: "ИИ-ассистент для разработчиков. Генерирует, объясняет и исправляет код на любом языке программирования.",
   },
   {
     icon: "Zap",
     tag: "OpenAI API аналог",
     name: "Devay API",
+    slug: "devayapi",
     desc: "REST API для интеграции всех моделей в ваши приложения. Совместим с OpenAI SDK — переход без переписывания кода.",
   },
 ];
@@ -54,6 +62,7 @@ const features = [
 
 const Index = () => {
   const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({});
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const sectionIds = ["hero", "products", "features", "how", "pricing", "cta"];
@@ -98,7 +107,10 @@ const Index = () => {
             <button className="px-5 py-2.5 text-sm font-medium border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all">
               Войти
             </button>
-            <button className="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-accent to-accent/80 text-black rounded-full hover:shadow-lg hover:shadow-accent/40 transition-all font-semibold">
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-accent to-accent/80 text-black rounded-full hover:shadow-lg hover:shadow-accent/40 transition-all font-semibold"
+            >
               Попробовать бесплатно
             </button>
           </div>
@@ -132,13 +144,16 @@ const Index = () => {
                 devay.ru — платформа полного цикла: языковые модели, генерация изображений и видео, распознавание речи, API для разработчиков. Всё как у OpenAI, но на российской инфраструктуре.
               </p>
               <div className="flex gap-4 mb-12 flex-col sm:flex-row">
-                <button className="group px-8 py-4 bg-gradient-to-r from-accent to-accent/90 text-black rounded-full hover:shadow-2xl hover:shadow-accent/50 transition-all font-semibold text-lg flex items-center gap-3 justify-center">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="group px-8 py-4 bg-gradient-to-r from-accent to-accent/90 text-black rounded-full hover:shadow-2xl hover:shadow-accent/50 transition-all font-semibold text-lg flex items-center gap-3 justify-center"
+                >
                   Начать бесплатно
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
                 </button>
-                <button className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white">
-                  Смотреть демо
-                </button>
+                <Link to="/#products" className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white flex items-center justify-center">
+                  Смотреть продукты
+                </Link>
               </div>
               <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
                 <div>
@@ -189,9 +204,10 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product, i) => (
-              <div
+              <Link
+                to={`/products/${product.slug}`}
                 key={i}
-                className={`group relative p-8 border border-accent/10 hover:border-accent/50 rounded-2xl bg-card/50 hover:bg-card/80 transition-all duration-700 cursor-pointer ${
+                className={`group relative p-8 border border-accent/10 hover:border-accent/50 rounded-2xl bg-card/50 hover:bg-card/80 transition-all duration-700 cursor-pointer block ${
                   visibleSections["products"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
                 style={{ transitionDelay: `${i * 80}ms` }}
@@ -210,7 +226,7 @@ const Index = () => {
                 <div className="mt-6 flex items-center gap-2 text-accent/70 text-sm font-medium group-hover:text-accent transition-colors">
                   Узнать больше <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -384,6 +400,7 @@ const Index = () => {
                     </ul>
                   </div>
                   <button
+                    onClick={() => setShowForm(true)}
                     className={`w-full px-6 py-4 rounded-xl font-semibold transition-all ${
                       plan.highlight
                         ? "bg-gradient-to-r from-accent to-accent/80 text-black hover:shadow-xl hover:shadow-accent/40"
@@ -415,13 +432,16 @@ const Index = () => {
             Зарегистрируйтесь бесплатно и получите доступ ко всем продуктам devay.ru. Никаких зарубежных карт и VPN.
           </p>
           <div className="flex gap-4 justify-center flex-col sm:flex-row">
-            <button className="group px-10 py-5 bg-gradient-to-r from-accent to-accent/90 text-black rounded-full hover:shadow-2xl hover:shadow-accent/40 transition-all font-bold text-lg flex items-center gap-3 mx-auto sm:mx-0">
+            <button
+              onClick={() => setShowForm(true)}
+              className="group px-10 py-5 bg-gradient-to-r from-accent to-accent/90 text-black rounded-full hover:shadow-2xl hover:shadow-accent/40 transition-all font-bold text-lg flex items-center gap-3 mx-auto sm:mx-0"
+            >
               Начать бесплатно
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
             </button>
-            <button className="px-10 py-5 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white mx-auto sm:mx-0">
-              Читать документацию
-            </button>
+            <Link to="/#products" className="px-10 py-5 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white mx-auto sm:mx-0 flex items-center justify-center">
+              Смотреть продукты
+            </Link>
           </div>
         </div>
       </section>
@@ -471,6 +491,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {showForm && <LeadForm onClose={() => setShowForm(false)} />}
     </div>
   );
 };
