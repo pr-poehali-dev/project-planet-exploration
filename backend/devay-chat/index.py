@@ -36,7 +36,7 @@ def handler(event: dict, context) -> dict:
         method='POST'
     )
 
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    with urllib.request.urlopen(req, timeout=85) as resp:
         result = json.loads(resp.read().decode('utf-8'))
 
     reply = result.get('message', {}).get('content', '')

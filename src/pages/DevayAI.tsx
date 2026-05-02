@@ -47,9 +47,12 @@ export default function DevayAI() {
     setLoading(true);
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000);
       const res = await fetch(func2url["devay-chat"], {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           model: "qwen2.5:7b",
           messages: [
@@ -58,6 +61,7 @@ export default function DevayAI() {
           ],
         }),
       });
+      clearTimeout(timeout);
       const data = await res.json();
       const reply = typeof data === "string" ? JSON.parse(data).reply : data.reply;
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
