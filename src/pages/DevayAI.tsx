@@ -66,10 +66,12 @@ export default function DevayAI() {
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
       const reply = parsed.reply ?? parsed?.message?.content ?? "Нет ответа";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch {
+    } catch (err) {
+      console.error("Fetch error:", err);
+      const msg = err instanceof Error ? err.message : String(err);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Ошибка соединения. Попробуйте ещё раз." },
+        { role: "assistant", content: `Ошибка: ${msg}` },
       ]);
     } finally {
       setLoading(false);
