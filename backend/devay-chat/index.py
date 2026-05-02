@@ -3,7 +3,7 @@ import os
 import urllib.request
 
 def handler(event: dict, context) -> dict:
-    """Обработчик чата DevayAI — проксирует запросы к Ollama на VPS (v4)"""
+    """Обработчик чата DevayAI — проксирует запросы к Ollama на VPS (v5)"""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {
