@@ -177,7 +177,7 @@ const Index = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-transparent to-transparent rounded-3xl blur-3xl animate-pulse" />
               <img
-                src="/omnius-logo.png"
+                src="/devay-logo.png"
                 alt="devay.ru AI"
                 className="w-full max-w-sm lg:max-w-md drop-shadow-2xl animate-float relative z-10"
               />
