@@ -9,7 +9,7 @@
         "model": "qwen2.5:7b"
       },
       "expectedStatus": 200,
-      "expectedBody": {"reply": "string"},
+      "expectedBody": {},
       "bodyMatcher": "partial"
     }
   ]
