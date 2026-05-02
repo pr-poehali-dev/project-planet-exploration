@@ -47,5 +47,5 @@ def handler(event: dict, context) -> dict:
             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json'
         },
-        'body': {'reply': reply, 'model': model}
+        'body': json.dumps({'reply': reply, 'model': model}, ensure_ascii=False)
     }
