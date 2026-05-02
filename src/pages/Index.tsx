@@ -177,9 +177,10 @@ const Index = () => {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-accent/30 via-transparent to-transparent rounded-3xl blur-3xl animate-pulse" />
               <img
-                src="https://cdn.poehali.dev/projects/100595ae-1bd3-4eb3-892f-4109c53e850b/files/cff359bf-89a2-45a6-bf44-5de37611b846.jpg"
+                src="https://cdn.poehali.dev/projects/100595ae-1bd3-4eb3-892f-4109c53e850b/files/da902f60-9561-41cc-940d-16a30daa71da.jpg"
                 alt="devay.ru AI"
                 className="w-full max-w-sm lg:max-w-md drop-shadow-2xl animate-float relative z-10"
+                style={{ mixBlendMode: "screen" }}
               />
             </div>
           </div>
