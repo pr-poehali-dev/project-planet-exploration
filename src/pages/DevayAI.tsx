@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import func2url from "../../backend/func2url.json";
 
@@ -23,10 +23,22 @@ export default function DevayAI() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("devay_token");
+    if (!token) navigate("/login");
+  }, [navigate]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("devay_token");
+    localStorage.removeItem("devay_email");
+    navigate("/login");
+  };
 
   const autoResize = () => {
     const ta = textareaRef.current;
@@ -97,10 +109,13 @@ export default function DevayAI() {
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-sm text-accent font-medium">DevayAI · qwen2.5</span>
           </div>
-          <Link to="/" className="text-sm text-muted-foreground hover:text-white transition-colors flex items-center gap-1">
-            <Icon name="ArrowLeft" size={16} />
-            Назад
-          </Link>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-muted-foreground hover:text-white transition-colors flex items-center gap-1"
+          >
+            <Icon name="LogOut" size={16} />
+            Выйти
+          </button>
         </div>
       </header>
 

@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Успешный вход",
+      "method": "POST",
+      "path": "/",
+      "body": {"email": "test@test", "password": "test@test"},
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Неверный пароль",
+      "method": "POST",
+      "path": "/",
+      "body": {"email": "test@test", "password": "wrongpass"},
+      "expectedStatus": 401,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

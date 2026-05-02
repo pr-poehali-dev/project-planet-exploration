@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductPage from "./pages/ProductPage";
 import DevayAI from "./pages/DevayAI";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/products/:slug" element={<ProductPage />} />
           <Route path="/chat" element={<DevayAI />} />
+          <Route path="/login" element={<Login />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

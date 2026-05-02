@@ -104,9 +104,9 @@ const Index = () => {
             <a href="#pricing" className="text-muted-foreground hover:text-white transition-colors">Тарифы</a>
           </nav>
           <div className="flex gap-3">
-            <button className="px-5 py-2.5 text-sm font-medium border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all">
+            <Link to="/login" className="px-5 py-2.5 text-sm font-medium border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all">
               Войти
-            </button>
+            </Link>
             <button
               onClick={() => setShowForm(true)}
               className="px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-accent to-accent/80 text-black rounded-full hover:shadow-lg hover:shadow-accent/40 transition-all font-semibold"
