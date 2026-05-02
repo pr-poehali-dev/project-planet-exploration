@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const USERS: Record<string, string> = {
@@ -12,6 +12,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string })?.from || "/chat";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export default function Login() {
     if (USERS[key] === password) {
       localStorage.setItem("devay_token", "devay-session-ok");
       localStorage.setItem("devay_email", key);
-      navigate("/chat");
+      navigate(from);
     } else {
       setError("Неверный email или пароль");
     }
