@@ -151,8 +151,9 @@ const Index = () => {
                   Начать бесплатно
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
                 </button>
-                <Link to="/#products" className="px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white flex items-center justify-center">
-                  Смотреть продукты
+                <Link to="/chat" className="group px-8 py-4 border border-accent/40 rounded-full hover:border-accent/70 hover:bg-accent/10 transition-all font-medium text-lg text-white flex items-center gap-3 justify-center">
+                  <MessageSquare className="w-5 h-5 text-accent" />
+                  Попробовать DevayAI
                 </Link>
               </div>
               <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
