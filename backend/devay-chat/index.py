@@ -3,7 +3,7 @@ import os
 import urllib.request
 
 def handler(event: dict, context) -> dict:
-    """Обработчик чата DevayAI — проксирует запросы к Ollama на VPS (v5)"""
+    """Обработчик чата DevayAI — проксирует запросы к Ollama на VPS (v6)"""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {
@@ -43,6 +43,9 @@ def handler(event: dict, context) -> dict:
 
     return {
         'statusCode': 200,
-        'headers': {'Access-Control-Allow-Origin': '*'},
-        'body': json.dumps({'reply': reply, 'model': model})
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+        },
+        'body': {'reply': reply, 'model': model}
     }

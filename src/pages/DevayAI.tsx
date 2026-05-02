@@ -63,7 +63,8 @@ export default function DevayAI() {
       });
       clearTimeout(timeout);
       const data = await res.json();
-      const reply = typeof data === "string" ? JSON.parse(data).reply : data.reply;
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      const reply = parsed.reply ?? parsed?.message?.content ?? "Нет ответа";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setMessages((prev) => [
