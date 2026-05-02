@@ -463,8 +463,15 @@ const Index = () => {
             <div>
               <div className="font-semibold text-sm mb-4">Продукты</div>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                {["DevayChat", "DevayVision", "DevayAudio", "DevayVideo", "DevayCode", "Devay API"].map((p) => (
-                  <li key={p}><a href="#" className="hover:text-white transition-colors">{p}</a></li>
+                {[
+                  { name: "DevayChat", slug: "devaychat" },
+                  { name: "DevayVision", slug: "devayvision" },
+                  { name: "DevayAudio", slug: "devayaudio" },
+                  { name: "DevayVideo", slug: "devayvideo" },
+                  { name: "DevayCode", slug: "devaycode" },
+                  { name: "Devay API", slug: "devayapi" },
+                ].map((p) => (
+                  <li key={p.slug}><Link to={`/products/${p.slug}`} className="hover:text-white transition-colors">{p.name}</Link></li>
                 ))}
               </ul>
             </div>
