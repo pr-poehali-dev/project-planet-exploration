@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import func2url from "../../backend/func2url.json";
+
+const USERS: Record<string, string> = {
+  "test@test": "test@test",
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,33 +13,20 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    try {
-      const res = await fetch(func2url["auth"], {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-      });
-      const data = await res.json();
-      const parsed = typeof data === "string" ? JSON.parse(data) : data;
-
-      if (!res.ok) {
-        setError(parsed.error || "Неверный email или пароль");
-        return;
-      }
-
-      localStorage.setItem("devay_token", parsed.token);
-      localStorage.setItem("devay_email", parsed.email);
+    const key = email.trim().toLowerCase();
+    if (USERS[key] === password) {
+      localStorage.setItem("devay_token", "devay-session-ok");
+      localStorage.setItem("devay_email", key);
       navigate("/chat");
-    } catch {
-      setError("Ошибка соединения. Попробуйте ещё раз.");
-    } finally {
-      setLoading(false);
+    } else {
+      setError("Неверный email или пароль");
     }
+    setLoading(false);
   };
 
   return (
