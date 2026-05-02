@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Тест чата DevayAI",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "messages": [{"role": "user", "content": "Привет! Кто ты?"}],
+        "model": "qwen2.5:7b"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"reply": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
