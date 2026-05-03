@@ -12,6 +12,14 @@ interface Message {
   video_base64?: string;
 }
 
+interface ChatSession {
+  id: string;
+  product: string;
+  title: string;
+  messages: Message[];
+  createdAt: number;
+}
+
 interface CodeBlockProps {
   code: string;
   lang: string;
@@ -191,12 +199,29 @@ const DEFAULT_CONFIG = {
   ],
 };
 
+const STORAGE_KEY = "devay_chat_history";
+
+function loadHistory(): ChatSession[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(sessions: ChatSession[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions.slice(0, 50)));
+}
+
 export default function DevayAI() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [history, setHistory] = useState<ChatSession[]>(loadHistory);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -205,6 +230,7 @@ export default function DevayAI() {
   const { product } = useParams<{ product?: string }>();
   const config = (product && PRODUCT_CONFIGS[product]) ? PRODUCT_CONFIGS[product] : DEFAULT_CONFIG;
   const mode = config.mode;
+  const productKey = product || "default";
 
   useEffect(() => {
     const token = localStorage.getItem("devay_token");
@@ -214,6 +240,37 @@ export default function DevayAI() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentSessionId(null);
+    setInput("");
+    setSidebarOpen(false);
+  };
+
+  const loadSession = (session: ChatSession) => {
+    setMessages(session.messages);
+    setCurrentSessionId(session.id);
+    setSidebarOpen(false);
+  };
+
+  const deleteSession = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = history.filter(s => s.id !== id);
+    setHistory(updated);
+    saveHistory(updated);
+    if (currentSessionId === id) startNewChat();
+  };
+
+  const persistMessages = (msgs: Message[], sessionId: string | null, firstUserMsg: string) => {
+    const id = sessionId || `${productKey}-${Date.now()}`;
+    const title = firstUserMsg.slice(0, 40) + (firstUserMsg.length > 40 ? "..." : "");
+    const session: ChatSession = { id, product: productKey, title, messages: msgs, createdAt: Date.now() };
+    const updated = [session, ...history.filter(s => s.id !== id)];
+    setHistory(updated);
+    saveHistory(updated);
+    return id;
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("devay_token");
@@ -324,7 +381,11 @@ export default function DevayAI() {
       }
 
       clearTimeout(timeout);
-      setMessages(prev => [...prev, { role: "assistant", content: reply, image_base64, video_base64 }]);
+      const assistantMsg: Message = { role: "assistant", content: reply, image_base64, video_base64 };
+      const finalMessages = [...updatedMessages, assistantMsg];
+      setMessages(finalMessages);
+      const newId = persistMessages(finalMessages, currentSessionId, userMsg.content);
+      if (!currentSessionId) setCurrentSessionId(newId);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setMessages(prev => [...prev, { role: "assistant", content: `Ошибка: ${msg}` }]);
@@ -347,14 +408,75 @@ export default function DevayAI() {
     product === "devayaudio" ? "whisper-large-v3" :
     "qwen2.5:7b";
 
+  const sessionsByProduct = history.filter(s => s.product === productKey);
+
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      {/* Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div className="w-72 bg-card border-r border-accent/20 flex flex-col h-full z-50">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-accent/20">
+              <span className="font-semibold text-sm">История чатов</span>
+              <button onClick={() => setSidebarOpen(false)} className="text-muted-foreground hover:text-white">
+                <Icon name="X" size={18} />
+              </button>
+            </div>
+            <button
+              onClick={startNewChat}
+              className="mx-3 mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl border border-accent/30 hover:border-accent/60 hover:bg-accent/5 transition-all text-sm text-accent"
+            >
+              <Icon name="Plus" size={15} />
+              Новый чат
+            </button>
+            <div className="flex-1 overflow-y-auto mt-2 px-3 pb-4 space-y-1">
+              {sessionsByProduct.length === 0 && (
+                <p className="text-xs text-muted-foreground px-2 py-4 text-center">История пуста</p>
+              )}
+              {sessionsByProduct.map(session => (
+                <button
+                  key={session.id}
+                  onClick={() => loadSession(session)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all group flex items-center justify-between gap-2 ${
+                    currentSessionId === session.id
+                      ? "bg-accent/10 border border-accent/30 text-white"
+                      : "hover:bg-white/5 text-white/70 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Icon name="MessageSquare" size={13} className="flex-shrink-0 text-muted-foreground" />
+                    <span className="truncate">{session.title}</span>
+                  </div>
+                  <button
+                    onClick={(e) => deleteSession(session.id, e)}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all flex-shrink-0"
+                  >
+                    <Icon name="Trash2" size={13} />
+                  </button>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        </div>
+      )}
+
+      <div className="flex flex-col flex-1 min-w-0">
       {/* Header */}
       <header className="flex-shrink-0 border-b border-accent/20 bg-background/80 backdrop-blur-xl z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="font-display font-black text-xl tracking-tighter bg-gradient-to-r from-white via-accent to-accent/80 bg-clip-text text-transparent">
-            devay.ru
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-muted-foreground hover:text-white transition-colors"
+              title="История чатов"
+            >
+              <Icon name="PanelLeft" size={20} />
+            </button>
+            <Link to="/" className="font-display font-black text-xl tracking-tighter bg-gradient-to-r from-white via-accent to-accent/80 bg-clip-text text-transparent">
+              devay.ru
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-sm text-accent font-medium">{config.name} · {modelLabel}</span>
@@ -563,6 +685,7 @@ export default function DevayAI() {
             DevayAI работает на российских серверах · Данные не передаются третьим лицам
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
