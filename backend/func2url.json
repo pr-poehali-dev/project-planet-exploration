@@ -1,4 +1,7 @@
 {
+  "devay-video": "https://functions.poehali.dev/a635d5e4-c46b-45f3-b3e3-1f49aa060204",
+  "devay-audio": "https://functions.poehali.dev/a143ff4f-32ff-4aa2-9b90-dcb5838218e9",
+  "devay-vision": "https://functions.poehali.dev/d46e9d1c-970b-4a05-9375-9af13c51bd4a",
   "auth": "https://functions.poehali.dev/7c928458-1abd-4283-9894-66ea25d24f6a",
   "devay-chat": "https://functions.poehali.dev/dcd96b51-9737-4775-ac85-efb3fa776623",
   "send-lead": "https://functions.poehali.dev/6a121b73-b6f8-4997-bd9f-22155b2c5570"
