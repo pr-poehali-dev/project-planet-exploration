@@ -428,18 +428,38 @@ export default function DevayAI() {
                 {msg.role === "assistant" ? (
                   <div>
                     {msg.image_base64 && (
-                      <img
-                        src={`data:image/png;base64,${msg.image_base64}`}
-                        alt="Сгенерированное изображение"
-                        className="rounded-xl max-w-full mb-3 border border-accent/20"
-                      />
+                      <div className="mb-3">
+                        <img
+                          src={`data:image/png;base64,${msg.image_base64}`}
+                          alt="Сгенерированное изображение"
+                          className="rounded-xl max-w-full border border-accent/20"
+                        />
+                        <a
+                          href={`data:image/png;base64,${msg.image_base64}`}
+                          download={`devay-vision-${Date.now()}.png`}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors"
+                        >
+                          <Icon name="Download" size={12} />
+                          Скачать изображение
+                        </a>
+                      </div>
                     )}
                     {msg.video_base64 && (
-                      <video
-                        controls
-                        className="rounded-xl max-w-full mb-3 border border-accent/20"
-                        src={`data:video/mp4;base64,${msg.video_base64}`}
-                      />
+                      <div className="mb-3">
+                        <video
+                          controls
+                          className="rounded-xl max-w-full border border-accent/20"
+                          src={`data:video/mp4;base64,${msg.video_base64}`}
+                        />
+                        <a
+                          href={`data:video/mp4;base64,${msg.video_base64}`}
+                          download={`devay-video-${Date.now()}.mp4`}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors"
+                        >
+                          <Icon name="Download" size={12} />
+                          Скачать видео
+                        </a>
+                      </div>
                     )}
                     <MessageContent content={msg.content} />
                   </div>
