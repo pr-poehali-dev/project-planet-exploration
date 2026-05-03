@@ -1,3 +1,5 @@
 {
-  "auth": "https://functions.poehali.dev/7c928458-1abd-4283-9894-66ea25d24f6a"
+  "auth": "https://functions.poehali.dev/7c928458-1abd-4283-9894-66ea25d24f6a",
+  "devay-chat": "https://functions.poehali.dev/dcd96b51-9737-4775-ac85-efb3fa776623",
+  "send-lead": "https://functions.poehali.dev/6a121b73-b6f8-4997-bd9f-22155b2c5570"
 }

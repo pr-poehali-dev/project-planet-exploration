@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Execute simple Python code",
+      "method": "POST",
+      "path": "/",
+      "body": {"code": "print('hello world')"},
+      "expectedStatus": 200,
+      "expectedBody": {"stdout": "hello world\n", "returncode": 0},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Execute code with error",
+      "method": "POST",
+      "path": "/",
+      "body": {"code": "1/0"},
+      "expectedStatus": 200,
+      "expectedBody": {"returncode": 1},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Empty code returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"code": ""},
+      "expectedStatus": 400,
+      "bodyMatcher": "partial"
+    }
+  ]
+}

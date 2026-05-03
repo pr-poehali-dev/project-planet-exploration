@@ -8,6 +8,109 @@ interface Message {
   content: string;
 }
 
+interface CodeBlockProps {
+  code: string;
+  lang: string;
+}
+
+function CodeBlock({ code, lang }: CodeBlockProps) {
+  const [output, setOutput] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const isPython = lang === "python" || lang === "py" || lang === "";
+
+  const runCode = async () => {
+    setRunning(true);
+    setOutput(null);
+    try {
+      const res = await fetch((func2url as Record<string, string>)["execute-code"], {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      const result = data.stdout || data.stderr || "Нет вывода";
+      setOutput(result);
+    } catch {
+      setOutput("Ошибка при выполнении кода");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-3 rounded-xl overflow-hidden border border-accent/20 bg-black/40">
+      <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-accent/10">
+        <span className="text-xs text-muted-foreground font-mono">{lang || "python"}</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={copyCode}
+            className="text-xs text-muted-foreground hover:text-white transition-colors flex items-center gap-1"
+          >
+            <Icon name={copied ? "Check" : "Copy"} size={12} />
+            {copied ? "Скопировано" : "Копировать"}
+          </button>
+          {isPython && (
+            <button
+              onClick={runCode}
+              disabled={running}
+              className="text-xs bg-accent text-black font-semibold px-3 py-1 rounded-lg flex items-center gap-1 hover:bg-accent/80 transition-colors disabled:opacity-50"
+            >
+              <Icon name={running ? "Loader" : "Play"} size={12} />
+              {running ? "Выполняется..." : "Запустить"}
+            </button>
+          )}
+        </div>
+      </div>
+      <pre className="px-4 py-3 text-sm font-mono text-white/90 overflow-x-auto leading-relaxed">
+        <code>{code}</code>
+      </pre>
+      {output !== null && (
+        <div className="border-t border-accent/10 px-4 py-3 bg-black/20">
+          <p className="text-xs text-muted-foreground mb-1 font-semibold uppercase tracking-wide">Результат</p>
+          <pre className="text-sm font-mono text-green-400 whitespace-pre-wrap">{output}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MessageContent({ content }: { content: string }) {
+  const parts: { type: "text" | "code"; value: string; lang: string }[] = [];
+  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: "text", value: content.slice(lastIndex, match.index), lang: "" });
+    }
+    parts.push({ type: "code", value: match[2].trim(), lang: match[1].toLowerCase() });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < content.length) {
+    parts.push({ type: "text", value: content.slice(lastIndex), lang: "" });
+  }
+
+  return (
+    <div>
+      {parts.map((part, i) =>
+        part.type === "code" ? (
+          <CodeBlock key={i} code={part.value} lang={part.lang} />
+        ) : (
+          <span key={i} className="whitespace-pre-wrap">{part.value}</span>
+        )
+      )}
+    </div>
+  );
+}
+
 const PRODUCT_CONFIGS: Record<string, { name: string; prompt: string; suggestions: string[] }> = {
   devaychat: {
     name: "DevayChat",
@@ -225,13 +328,13 @@ export default function DevayAI() {
                 </div>
               )}
               <div
-                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-accent text-black font-medium rounded-br-sm"
+                    ? "bg-accent text-black font-medium rounded-br-sm whitespace-pre-wrap"
                     : "bg-card border border-accent/10 text-white/90 rounded-bl-sm"
                 }`}
               >
-                {msg.content}
+                {msg.role === "assistant" ? <MessageContent content={msg.content} /> : msg.content}
               </div>
               {msg.role === "user" && (
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex-shrink-0 flex items-center justify-center mt-1">
