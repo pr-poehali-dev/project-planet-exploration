@@ -1,10 +1,6 @@
 import json
 import os
 import urllib.request
-import urllib.error
-import time
-
-FAL_API_URL = "https://queue.fal.run/fal-ai/wan/v2/1.3b/text-to-video"
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -13,25 +9,16 @@ CORS_HEADERS = {
     'Access-Control-Max-Age': '86400'
 }
 
-def fal_request(url, data=None, method='GET'):
-    api_key = os.environ['FAL_API_KEY']
-    headers = {
-        'Authorization': f'Key {api_key}',
-        'Content-Type': 'application/json'
-    }
-    payload = json.dumps(data).encode('utf-8') if data else None
-    req = urllib.request.Request(url, data=payload, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return json.loads(resp.read().decode('utf-8'))
-
 def handler(event: dict, context) -> dict:
-    """Генерация видео через FAL.ai Wan2.1-T2V (очередь + polling)"""
+    """Генерация видео через Wan2.1-T2V на VPS (CPU-режим, таймаут 30 мин)"""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
 
     body = json.loads(event.get('body') or '{}')
     prompt = body.get('prompt', '').strip()
+    num_frames = body.get('num_frames', 49)
+    fps = body.get('fps', 8)
 
     if not prompt:
         return {
@@ -40,43 +27,29 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'error': 'prompt is required'})
         }
 
-    submit = fal_request(FAL_API_URL, data={
+    vps_url = os.environ['VPS_VIDEO_URL']
+
+    payload = json.dumps({
         'prompt': prompt,
-        'num_frames': 49,
-        'frames_per_second': 8,
-        'resolution': '480p',
-        'num_inference_steps': 30
-    }, method='POST')
+        'num_frames': num_frames,
+        'fps': fps
+    }).encode('utf-8')
 
-    request_id = submit.get('request_id')
-    if not request_id:
-        raise ValueError(f"FAL did not return request_id: {submit}")
+    req = urllib.request.Request(
+        f'{vps_url}/generate',
+        data=payload,
+        headers={'Content-Type': 'application/json'},
+        method='POST'
+    )
 
-    status_url = f"https://queue.fal.run/fal-ai/wan/v2/1.3b/text-to-video/requests/{request_id}/status"
-    result_url = f"https://queue.fal.run/fal-ai/wan/v2/1.3b/text-to-video/requests/{request_id}"
-
-    for _ in range(60):
-        time.sleep(5)
-        status = fal_request(status_url)
-        st = status.get('status')
-        if st == 'COMPLETED':
-            break
-        if st == 'FAILED':
-            raise RuntimeError(f"FAL generation failed: {status.get('error')}")
-
-    result = fal_request(result_url)
-    video_url = result.get('video', {}).get('url') or (result.get('videos') or [{}])[0].get('url', '')
-
-    if not video_url:
-        raise ValueError(f"No video URL in FAL response: {result}")
-
-    video_req = urllib.request.Request(video_url)
-    with urllib.request.urlopen(video_req, timeout=60) as vresp:
-        import base64
-        video_b64 = base64.b64encode(vresp.read()).decode('utf-8')
+    with urllib.request.urlopen(req, timeout=1800) as resp:
+        result = json.loads(resp.read().decode('utf-8'))
 
     return {
         'statusCode': 200,
         'headers': {**CORS_HEADERS, 'Content-Type': 'application/json'},
-        'body': json.dumps({'video_base64': video_b64, 'prompt': prompt})
+        'body': json.dumps({
+            'video_base64': result.get('video_base64', ''),
+            'prompt': prompt
+        })
     }

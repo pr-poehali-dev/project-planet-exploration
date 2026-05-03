@@ -217,6 +217,8 @@ export default function DevayAI() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoElapsed, setVideoElapsed] = useState(0);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -372,7 +374,21 @@ export default function DevayAI() {
         image_base64 = await sendVision(trimmed);
         reply = `Изображение по запросу: «${trimmed}»`;
       } else if (mode === "video") {
-        video_base64 = await sendVideo(trimmed);
+        setVideoProgress(0);
+        setVideoElapsed(0);
+        const startTime = Date.now();
+        const progressInterval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          setVideoElapsed(elapsed);
+          // прогресс до 95% за 30 минут
+          setVideoProgress(Math.min(95, Math.floor((elapsed / 1800) * 95)));
+        }, 1000);
+        try {
+          video_base64 = await sendVideo(trimmed);
+        } finally {
+          clearInterval(progressInterval);
+          setVideoProgress(100);
+        }
         reply = `Видео по запросу: «${trimmed}»`;
       } else if (mode === "audio") {
         reply = await sendAudio(audioFile!);
@@ -614,14 +630,31 @@ export default function DevayAI() {
               <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex-shrink-0 flex items-center justify-center mt-1">
                 <Icon name="Sparkles" size={14} className="text-accent" />
               </div>
-              <div className="bg-card border border-accent/10 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-                {mode === "video" && <span className="text-xs text-muted-foreground ml-2">Генерация видео ~2 мин...</span>}
-                {mode === "vision" && <span className="text-xs text-muted-foreground ml-2">Генерация изображения...</span>}
-                {mode === "audio" && <span className="text-xs text-muted-foreground ml-2">Распознаю речь...</span>}
-              </div>
+              {mode === "video" ? (
+                <div className="bg-card border border-accent/10 px-4 py-3 rounded-2xl rounded-bl-sm flex flex-col gap-2 min-w-[260px]">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80 font-medium">Генерация видео на CPU...</span>
+                    <span className="text-muted-foreground">
+                      {Math.floor(videoElapsed / 60)}:{String(videoElapsed % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-1000"
+                      style={{ width: `${videoProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">Это может занять 10–30 минут, не закрывай вкладку</span>
+                </div>
+              ) : (
+                <div className="bg-card border border-accent/10 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  {mode === "vision" && <span className="text-xs text-muted-foreground ml-2">Генерация изображения...</span>}
+                  {mode === "audio" && <span className="text-xs text-muted-foreground ml-2">Распознаю речь...</span>}
+                </div>
+              )}
             </div>
           )}
 
