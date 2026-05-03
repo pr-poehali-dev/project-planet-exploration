@@ -196,6 +196,7 @@ export default function DevayAI() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -462,6 +463,19 @@ export default function DevayAI() {
                       </div>
                     )}
                     <MessageContent content={msg.content} />
+                    {mode === "audio" && !msg.image_base64 && !msg.video_base64 && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(msg.content);
+                          setCopiedIndex(i);
+                          setTimeout(() => setCopiedIndex(null), 2000);
+                        }}
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors"
+                      >
+                        <Icon name={copiedIndex === i ? "Check" : "Copy"} size={12} />
+                        {copiedIndex === i ? "Скопировано" : "Копировать текст"}
+                      </button>
+                    )}
                   </div>
                 ) : msg.content}
               </div>
