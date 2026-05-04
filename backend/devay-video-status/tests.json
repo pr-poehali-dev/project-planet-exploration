@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS health check",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Missing job_id error",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {"error": "job_id is required"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

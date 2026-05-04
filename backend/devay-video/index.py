@@ -10,15 +10,18 @@ CORS_HEADERS = {
 }
 
 def handler(event: dict, context) -> dict:
-    """Генерация видео через Wan2.1-T2V на VPS (CPU-режим, таймаут 30 мин)"""
+    """Запуск генерации видео через CogVideoX на VPS. Возвращает job_id для последующей проверки статуса."""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
 
-    body = json.loads(event.get('body') or '{}')
+    raw_body = event.get('body') or '{}'
+    body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
     prompt = body.get('prompt', '').strip()
-    num_frames = body.get('num_frames', 49)
-    fps = body.get('fps', 8)
+    num_frames = int(body.get('num_frames', 49))
+    fps = int(body.get('fps', 8))
+    guidance_scale = float(body.get('guidance_scale', 6.0))
+    num_steps = int(body.get('num_steps', 50))
 
     if not prompt:
         return {
@@ -28,28 +31,34 @@ def handler(event: dict, context) -> dict:
         }
 
     vps_url = os.environ['VPS_VIDEO_URL']
+    api_key = os.environ['VIDEO_API_KEY']
 
     payload = json.dumps({
         'prompt': prompt,
         'num_frames': num_frames,
-        'fps': fps
+        'fps': fps,
+        'guidance_scale': guidance_scale,
+        'num_steps': num_steps,
     }).encode('utf-8')
 
     req = urllib.request.Request(
         f'{vps_url}/generate',
         data=payload,
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'X-API-Key': api_key,
+        },
         method='POST'
     )
 
-    with urllib.request.urlopen(req, timeout=1800) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read().decode('utf-8'))
 
     return {
         'statusCode': 200,
         'headers': {**CORS_HEADERS, 'Content-Type': 'application/json'},
         'body': json.dumps({
-            'video_base64': result.get('video_base64', ''),
-            'prompt': prompt
+            'job_id': result.get('job_id'),
+            'status': result.get('status', 'queued'),
         })
     }
