@@ -317,15 +317,43 @@ export default function DevayAI() {
     return data.image_base64 as string;
   };
 
-  const sendVideo = async (prompt: string) => {
+  const sendVideo = async (prompt: string, onStatus?: (status: string, elapsed: number) => void) => {
     const res = await fetch(urls["devay-video"], {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt, num_frames: 49, fps: 8 }),
     });
     const data = await res.json();
-    if (!data.video_base64) throw new Error("Не удалось сгенерировать видео");
-    return data.video_base64 as string;
+    if (!data.job_id) throw new Error("Не удалось запустить генерацию видео");
+
+    const jobId = data.job_id;
+    const startTime = Date.now();
+
+    while (true) {
+      await new Promise(r => setTimeout(r, 5000));
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      onStatus?.(jobId, elapsed);
+
+      const statusRes = await fetch(`${urls["devay-video-status"]}?job_id=${jobId}`);
+      const statusData = await statusRes.json();
+
+      if (statusData.status === "done" && statusData.video_url) {
+        const videoRes = await fetch(statusData.video_url);
+        const blob = await videoRes.blob();
+        return await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(",")[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+      if (statusData.status === "error") {
+        throw new Error(statusData.error || "Ошибка генерации видео");
+      }
+    }
   };
 
   const sendAudio = async (file: File) => {
@@ -376,19 +404,11 @@ export default function DevayAI() {
       } else if (mode === "video") {
         setVideoProgress(0);
         setVideoElapsed(0);
-        const startTime = Date.now();
-        const progressInterval = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        video_base64 = await sendVideo(trimmed, (_jobId, elapsed) => {
           setVideoElapsed(elapsed);
-          // прогресс до 95% за 30 минут
           setVideoProgress(Math.min(95, Math.floor((elapsed / 1800) * 95)));
-        }, 1000);
-        try {
-          video_base64 = await sendVideo(trimmed);
-        } finally {
-          clearInterval(progressInterval);
-          setVideoProgress(100);
-        }
+        });
+        setVideoProgress(100);
         reply = `Видео по запросу: «${trimmed}»`;
       } else if (mode === "audio") {
         reply = await sendAudio(audioFile!);
@@ -420,7 +440,7 @@ export default function DevayAI() {
   const modelLabel =
     product === "devaycode" ? "qwen2.5-coder:32b" :
     product === "devayvision" ? "playground-v2.5" :
-    product === "devayvideo" ? "wan2.1-t2v" :
+    product === "devayvideo" ? "cogvideox-2b" :
     product === "devayaudio" ? "whisper-large-v3" :
     "qwen2.5:7b";
 
