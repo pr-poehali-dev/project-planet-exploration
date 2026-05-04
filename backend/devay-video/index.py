@@ -30,7 +30,7 @@ def handler(event: dict, context) -> dict:
             'body': json.dumps({'error': 'prompt is required'})
         }
 
-    vps_url = os.environ.get('VPS_VIDEO_URL', 'http://84.54.31.44:8002')
+    vps_url = os.environ.get('VPS_VIDEO_URL', 'http://84.54.31.44:8005')
     api_key = os.environ['VIDEO_API_KEY']
 
     payload = json.dumps({
